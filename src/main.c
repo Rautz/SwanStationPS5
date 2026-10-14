@@ -431,14 +431,26 @@ void app_rescan(void)
     static const char *const names[] = {"SwanStationPS5", "PSXS5"};
     static char drive_roots[2 * 2 * 4][SwanStationPS5_PATH_MAX];
     static char usb_roots[2][SwanStationPS5_PATH_MAX];
-    const char *roots[2 + 2 * 2 * 4 + 2];
+    /* Where the catalog app (PPSA99058) saves what it downloads: <root>/downloads/files holds the
+     * loose .cue/.bin, <root>/downloads/extracted the unpacked sets, on /data and on each drive. */
+    static const char *const catalog_dirs[] = {"downloads/files", "downloads/extracted"};
+    static const char *const catalog_roots[] = {"/data", "/mnt/usb0", "/mnt/usb1", "/mnt/ext0", "/mnt/ext1"};
+    static char catalog_paths[5 * 2][SwanStationPS5_PATH_MAX];
+    const char *roots[2 + 2 * 2 * 4 + 2 + 5 * 2];
     int root_count = 0;
     roots[root_count++] = app.paths.games;
     roots[root_count++] = "/data/PSXS5/games";
+    for (int r = 0; r < 5; ++r)
+        for (int c = 0; c < 2; ++c)
+        {
+            char *p = catalog_paths[r * 2 + c];
+            snprintf(p, SwanStationPS5_PATH_MAX, "%s/%s", catalog_roots[r], catalog_dirs[c]);
+            roots[root_count++] = p;
+        }
     for (int d = 0; d < 4; ++d)
         for (int n = 0; n < 2; ++n)
         {
-            char *plain = drive_roots[root_count - 2], *games = drive_roots[root_count - 1];
+            char *plain = drive_roots[(d * 2 + n) * 2], *games = drive_roots[(d * 2 + n) * 2 + 1];
             snprintf(plain, SwanStationPS5_PATH_MAX, "%s/%s", drives[d], names[n]);
             snprintf(games, SwanStationPS5_PATH_MAX, "%s/%s/games", drives[d], names[n]);
             roots[root_count++] = plain;
